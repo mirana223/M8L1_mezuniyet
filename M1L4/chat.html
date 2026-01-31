@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sohbet Sayfası - Discord Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .header {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-nav {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-nav:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .container {
+            background: white;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 80px);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .message {
+            display: flex;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        .message.bot .message-content {
+            background: #f0f0f0;
+            color: #333;
+            border-radius: 18px 18px 18px 4px;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+            padding: 0 5px;
+        }
+
+        .chat-input-area {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            background: #f9f9f9;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+        }
+
+        #chat-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: border-color 0.3s ease;
+        }
+
+        #chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-emoji {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-emoji:hover {
+            transform: scale(1.2);
+        }
+
+        .btn-send {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-send:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .emoji-picker {
+            display: none;
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+            max-width: 300px;
+        }
+
+        .emoji-picker.show {
+            display: grid;
+        }
+
+        .emoji-item {
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.2s ease;
+        }
+
+        .emoji-item:hover {
+            background: #f0f0f0;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+
+        .welcome-message {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            color: #555;
+            margin: 20px;
+        }
+
+        .welcome-message h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+
+            .chat-input-area {
+                flex-wrap: wrap;
+            }
+
+            .input-group {
+                width: 100%;
+            }
+
+            .btn-send {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💬 Sohbet Sayfası</h1>
+        <div class="header-buttons">
+            <a href="index.html" class="btn-nav">← Ses Tanıma'ya Dön</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="chat-messages" id="chat-messages">
+            <div class="message bot">
+                <div>
+                    <div class="message-content">
+                        👋 Merhaba! Ben Discord Bot'un sohbet asistanıyım. Seninle konuşmak için buradayım. Sorularını yaz! 😊
+                    </div>
+                    <div class="message-time">Şimdi</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="input-group">
+                <button class="btn-emoji" id="emoji-btn" title="Emoji Ekle">😊</button>
+                <input 
+                    type="text" 
+                    id="chat-input" 
+                    placeholder="Mesajını yazıp Enter'a bas veya Gönder butonuna tıkla..."
+                    autocomplete="off"
+                >
+            </div>
+            <button class="btn-send" id="send-btn">📤 Gönder</button>
+
+            <div class="emoji-picker" id="emoji-picker"></div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const emojiBtn = document.getElementById('emoji-btn');
+        const emojiPicker = document.getElementById('emoji-picker');
+
+        const emojis = ['😊', '😂', '😍', '🤔', '😎', '🚀', '💯', '👍', '❤️', '🔥', '⭐', '🎉', '🎯', '💡', '🌟', '✨', '😘', '🤩', '😭', '🤷', '🙏', '💪', '🎨', '🎵'];
+
+        // Emoji Picker'ı Doldur
+        emojis.forEach(emoji => {
+            const emojiItem = document.createElement('div');
+            emojiItem.className = 'emoji-item';
+            emojiItem.textContent = emoji;
+            emojiItem.addEventListener('click', () => {
+                chatInput.value += emoji;
+                chatInput.focus();
+                emojiPicker.classList.remove('show');
+            });
+            emojiPicker.appendChild(emojiItem);
+        });
+
+        // Emoji Picker Aç/Kapat
+        emojiBtn.addEventListener('click', () => {
+            emojiPicker.classList.toggle('show');
+        });
+
+        // Dışarıya tıklanınca emoji picker'ı kapat
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.emoji-picker') && !e.target.closest('.btn-emoji')) {
+                emojiPicker.classList.remove('show');
+            }
+        });
+
+        // Mesaj Ekle Fonksiyonu
+        function addMessage(text, isUser = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+
+            const time = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+            messageDiv.innerHTML = `
+                <div>
+                    <div class="message-content">${escapeHtml(text)}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            return messageDiv;
+        }
+
+        // HTML İnjection'dan Korunma
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Bot Yanıtları
+        const botResponses = {
+            'merhaba': 'Merhaba! Nasıl yardımcı olabilirim? 👋',
+            'nasilsin': 'Çok iyiyim, teşekkür ederim! 😊 Sen nasılsın?',
+            'naber': 'Harika, sen? 🚀',
+            'teşekkür': 'Bir şey değil! Her zaman yardımcı olmaktan mutluyum 😊',
+            'bye': 'Hoşça kalın! Yakında görüşmek üzere! 👋',
+            'discord': 'Discord hakkında soruların var mı? Bot komutlarını bilmek ister misin? 🤔',
+            'ses tanıma': 'Ses tanıma özelliğimiz harika! Başka sayfaya gidip dene! 🎤',
+            'yardım': 'Size yardımcı olmaktan mutluyum! Sormak istediğin herhangi bir şey var mı? 💡',
+            'özellik': '✨ Benim özellikleri:\n- Ses Tanıma\n- Çoklu Dil Çevirisi\n- Emoji Desteği\n- 24/7 Sohbet 💬',
+            'bot': 'Ben bir Discord Botuyum! Ses tanıma ve sohbet özellikleriyle yardımcı olmaya hazırım! 🤖'
+        };
+
+        // Bot Yanıtını Bul
+        function getBotResponse(userMessage) {
+            const lowerMessage = userMessage.toLowerCase().trim();
+
+            // Tam eşleşme kontrolü
+            for (let key in botResponses) {
+                if (lowerMessage.includes(key)) {
+                    return botResponses[key];
+                }
+            }
+
+            // Varsayılan yanıt
+            const defaultResponses = [
+                'İlginç bir soru! 🤔 Bana daha fazla bilgi verebilir misin?',
+                'Hmm, buna cevap vermek için daha fazla bilgiye ihtiyacım var. 💭',
+                'Çok güzel bir fikir! 💡',
+                'Doğru! Haklısın! 👍',
+                'Bu konuda ne düşünüyorsun? 🎯',
+                'Haha, eğlenceli! 😂',
+                'Bilginiz için teşekkür ederim! 🙏'
+            ];
+
+            return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+        }
+
+        // Typing Göstergesi
+        function showTyping() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.innerHTML = `
+                <div>
+                    <div class="message-content">
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return messageDiv;
+        }
+
+        // Mesaj Gönder
+        function sendMessage() {
+            const text = chatInput.value.trim();
+
+            if (!text) return;
+
+            // Kullanıcı mesajı ekle
+            addMessage(text, true);
+            chatInput.value = '';
+            emojiPicker.classList.remove('show');
+
+            // Typing göstergesi göster
+            const typingDiv = showTyping();
+
+            // Simülasyon: 1 saniye sonra bot yanıtını gönder
+            setTimeout(() => {
+                typingDiv.remove();
+                const response = getBotResponse(text);
+                addMessage(response, false);
+            }, 1000);
+        }
+
+        // Gönder Butonuna Tıkla
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Enter Tuşu
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Sayfa Yükülenince Focus
+        window.addEventListener('load', () => {
+            chatInput.focus();
+        });
+    </script>
+</body>
+</html>

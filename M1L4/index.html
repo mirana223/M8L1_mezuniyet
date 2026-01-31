@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Bot - Ses Tanıma</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 30px 0;
+        }
+
+        .feature-list li {
+            padding: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .commands {
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 5px;
+        }
+
+        .commands h2 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .command {
+            background: white;
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            border: 1px solid #ddd;
+        }
+
+        .command-prefix {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        footer {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .recorder-section {
+            background: #f9f9f9;
+            border: 2px dashed #667eea;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .recorder-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .recording-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn-record {
+            background: #e74c3c;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-record:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+
+        .btn-record.recording {
+            animation: pulse 1s infinite;
+            background: #e74c3c;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+        }
+
+        .btn-stop {
+            background: #95a5a6;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-stop:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-stop:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            background: #ecf0f1;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-section h4 {
+            color: #27ae60;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .result-text {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            color: #333;
+            margin: 10px 0;
+            word-break: break-word;
+        }
+
+        .audio-player {
+            margin: 15px 0;
+            width: 100%;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #95a5a6;
+        }
+
+        .status-indicator.active {
+            background: #e74c3c;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.5; }
+        }
+
+        .language-selector {
+            margin: 15px 0;
+        }
+
+        .language-selector label {
+            display: block;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .language-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .language-selector select:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .recording-controls {
+                flex-direction: column;
+            }
+
+            .btn-record, .btn-stop {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Discord Bot - Ses Tanıma</h1>
+        <p class="subtitle">Türkçe konuşma tanıma ve çeviri sistemi</p>
+
+        <div class="recorder-section">
+            <h3><span class="status-indicator"></span>Web Tabanlı Ses Tanıma</h3>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">Konuş ve bot otomatik olarak dinlesin</p>
+            
+            <div class="language-selector">
+                <label for="language-select">Çevirme Dili (Opsiyonel):</label>
+                <select id="language-select">
+                    <option value="tr">Türkçe (Original)</option>
+                    <option value="en">İngilizce</option>
+                    <option value="es">İspanyolca</option>
+                    <option value="fr">Fransızca</option>
+                    <option value="de">Almanca</option>
+                    <option value="ru">Rusça</option>
+                    <option value="ja">Japonca</option>
+                    <option value="zh-CN">Çince</option>
+                </select>
+            </div>
+
+            <div class="recording-controls">
+                <button class="btn-record" id="start-record">🎤 Kaydı Başlat</button>
+                <button class="btn-stop" id="stop-record" disabled>⏹ Kaydı Durdur</button>
+                <button class="btn-primary" id="reset-record" style="margin: 0;">🔄 Sıfırla</button>
+            </div>
+
+            <div id="offline-notice" style="background: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 13px; display: none;">
+                ⚠️ <strong>Offline Modu:</strong> İnternet bağlantısı yok. Basit yazı girişi kullanabilirsin.
+            </div>
+
+            <div id="manual-input" style="display: none; margin: 15px 0;">
+                <label style="display: block; color: #333; font-weight: 600; margin-bottom: 8px;">📝 Manuel Yazı Gir:</label>
+                <textarea id="manual-text" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; resize: vertical; min-height: 80px; font-family: Arial, sans-serif;" placeholder="Buraya yazı yazabilirsin..."></textarea>
+                <button id="manual-submit" style="background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 8px; font-weight: 600;">✓ Metni Gönder</button>
+            </div>
+
+            <audio id="audio-playback" class="audio-player" controls style="display: none;"></audio>
+
+            <div id="result-section" class="result-section">
+                <h4>📝 Tanınan Metin (Türkçe):</h4>
+                <div class="result-text" id="recognized-text">Hazırlanıyor...</div>
+
+                <div id="translated-section" style="display: none;">
+                    <h4 style="margin-top: 15px;">🌍 Çeviri:</h4>
+                    <div class="result-text" id="translated-text"></div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="feature-list">
+            <li>Gerçek zamanlı Türkçe konuşma tanıma</li>
+            <li>Discord ses kanalıyla entegrasyon</li>
+            <li>Çoklu dil çevirisi desteği</li>
+            <li>Web tabanlı failsafe sistemi</li>
+            <li>Emoji ve eğlenceli komutlar</li>
+            <li>Ses kaydı ve işleme</li>
+        </ul>
+
+        <div class="commands">
+            <h2>📋 Mevcut Komutlar</h2>
+            <div class="command"><span class="command-prefix">!</span>record - Ses kaydı ve tanıma</div>
+            <div class="command"><span class="command-prefix">!</span>hello - Bot'u selamla</div>
+            <div class="command"><span class="command-prefix">!</span>password - Rastgele şifre oluştur</div>
+            <div class="command"><span class="command-prefix">!</span>emoji - Günlük emoji al</div>
+            <div class="command"><span class="command-prefix">!</span>yazi_tura - Yazı tura at</div>
+            <div class="command"><span class="command-prefix">!</span>nasilsin - Bot'a sor</div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="window.open('https://discord.com', '_blank')">Discord'u Aç</button>
+            <a href="chat.html" class="btn-primary" style="text-decoration: none; display: inline-block;">💬 Sohbet Sayfası</a>
+            <button class="btn-secondary" onclick="copyCommand()">Komut Kopyala</button>
+        </div>
+
+        <footer>
+            <p>Kodland M1L4 | Ses Tanıma Sistemi</p>
+            <p>© 2026 Tüm hakları saklıdır.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Web Speech API - Tarayıcı tarafında ses tanıma
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // Tanıma ayarları
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'tr-TR';
+
+        const startBtn = document.getElementById('start-record');
+        const stopBtn = document.getElementById('stop-record');
+        const resetBtn = document.getElementById('reset-record');
+        const resultSection = document.getElementById('result-section');
+        const recognizedText = document.getElementById('recognized-text');
+        const translatedText = document.getElementById('translated-text');
+        const translatedSection = document.getElementById('translated-section');
+        const statusIndicator = document.querySelector('.status-indicator');
+        const languageSelect = document.getElementById('language-select');
+        const offlineNotice = document.getElementById('offline-notice');
+        const manualInput = document.getElementById('manual-input');
+        const manualText = document.getElementById('manual-text');
+        const manualSubmit = document.getElementById('manual-submit');
+        
+        let isOfflineMode = false;
+
+        // Sesli kaydı başlat
+        startBtn.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                isRecording = true;
+
+                startBtn.disabled = true;
+                startBtn.classList.add('recording');
+                stopBtn.disabled = false;
+                statusIndicator.classList.add('active');
+                recognizedText.textContent = '🎤 Dinleniyor...';
+                translatedSection.style.display = 'none';
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    document.getElementById('audio-playback').src = audioUrl;
+                    document.getElementById('audio-playback').style.display = 'block';
+
+                    // Web Speech API kullan
+                    recognition.start();
+                };
+
+                mediaRecorder.start();
+
+            } catch (err) {
+                alert('❌ Mikrofona erişim reddedildi: ' + err.message);
+                startBtn.disabled = false;
+            }
+        });
+
+        // Kaydı durdur
+        stopBtn.addEventListener('click', () => {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+                startBtn.disabled = false;
+                startBtn.classList.remove('recording');
+                stopBtn.disabled = true;
+                statusIndicator.classList.remove('active');
+            }
+        });
+
+        // Sıfırla
+        resetBtn.addEventListener('click', () => {
+            audioChunks = [];
+            recognizedText.textContent = 'Hazırlanıyor...';
+            translatedText.textContent = '';
+            translatedSection.style.display = 'none';
+            manualText.value = '';
+            document.getElementById('audio-playback').src = '';
+            document.getElementById('audio-playback').style.display = 'none';
+            resultSection.classList.remove('show');
+            startBtn.disabled = isOfflineMode ? true : false;
+            stopBtn.disabled = true;
+            recognition.abort();
+        });
+
+        // Tanıma sonuçları
+        recognition.onresult = async (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript + ' ';
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+
+            if (finalTranscript) {
+                recognizedText.textContent = finalTranscript.trim();
+                resultSection.classList.add('show');
+
+                // Çevirme yap
+                const selectedLang = languageSelect.value;
+                if (selectedLang !== 'tr') {
+                    await translateText(finalTranscript.trim(), selectedLang);
+                }
+            } else {
+                recognizedText.textContent = interimTranscript || '🎤 Dinleniyor...';
+            }
+        };
+
+        recognition.onerror = (event) => {
+            let errorMsg = '';
+            
+            switch(event.error) {
+                case 'network':
+                    errorMsg = '❌ İnternet bağlantısı hatası. Offline moda geçildi.';
+                    isOfflineMode = true;
+                    activateOfflineMode();
+                    break;
+                case 'no-speech':
+                    errorMsg = '❌ Ses algılanmadı. Lütfen tekrar konuşun.';
+                    break;
+                case 'audio-capture':
+                    errorMsg = '❌ Mikrofona erişim reddedildi.';
+                    break;
+                case 'service-not-allowed':
+                    errorMsg = '❌ Ses tanıma servisi kullanılamıyor. Offline moda geçildi.';
+                    isOfflineMode = true;
+                    activateOfflineMode();
+                    break;
+                default:
+                    errorMsg = '❌ Hata: ' + event.error;
+            }
+            
+            recognizedText.textContent = errorMsg;
+            resultSection.classList.add('show');
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        };
+        
+        // Offline Modu Etkinleştir
+        function activateOfflineMode() {
+            offlineNotice.style.display = 'block';
+            manualInput.style.display = 'block';
+            startBtn.disabled = true;
+        }
+        
+        // Manuel Metin Gönder
+        manualSubmit.addEventListener('click', async () => {
+            const text = manualText.value.trim();
+            
+            if (!text) {
+                alert('Lütfen metin giriniz!');
+                return;
+            }
+            
+            recognizedText.textContent = text;
+            resultSection.classList.add('show');
+            
+            // Çevir
+            const selectedLang = languageSelect.value;
+            if (selectedLang !== 'tr') {
+                await translateText(text, selectedLang);
+            }
+        });
+
+        recognition.onend = () => {
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        };
+
+        // Google Çeviri API'si (Client-side)
+        async function translateText(text, targetLang) {
+            try {
+                const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=tr|${targetLang}`);
+                const data = await response.json();
+                
+                if (data.responseStatus === 200) {
+                    translatedText.textContent = data.responseData.translatedText;
+                    translatedSection.style.display = 'block';
+                } else {
+                    translatedText.textContent = '❌ Çeviri başarısız oldu';
+                }
+            } catch (err) {
+                console.error('Çeviri hatası:', err);
+                translatedText.textContent = '❌ Çeviri başarısız oldu';
+            }
+        }
+
+        // Tarayıcı desteği kontrolü
+        window.addEventListener('load', () => {
+            if (!SpeechRecognition) {
+                startBtn.disabled = true;
+                recognizedText.textContent = '⚠️ Tarayıcınız Ses Tanıma özelliğini desteklemiyor. Chrome, Edge veya Safari kullanın.';
+                resultSection.classList.add('show');
+            }
+        });
+    </script>
+</body>
+</html>
